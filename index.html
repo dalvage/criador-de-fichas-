@@ -165,7 +165,7 @@
       outline: none;
     }
 
-    /* Botões de Ação */
+    /* Painel de Ações */
     .actions-panel {
       margin-top: 18px;
       padding-top: 14px;
@@ -209,15 +209,6 @@
       color: #ffffff; 
       box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
     }
-    
-    .btn-upload { 
-      background-color: #334155; 
-      color: #cbd5e1; 
-    }
-    
-    input[type="file"] { 
-      display: none; 
-    }
 
     /* Pré-visualização */
     .preview-container {
@@ -230,7 +221,7 @@
       padding-bottom: 10px;
     }
 
-    /* Elemento que será transformado em Imagem */
+    /* Elemento renderizado */
     #card-to-export {
       width: 100%;
       max-width: 320px;
@@ -421,8 +412,6 @@
       <!-- Ações -->
       <div class="actions-panel">
         <button type="button" class="btn btn-png" id="btn-download-png">🖼️ Baixar Ficha em PNG</button>
-        <label for="input-upload-data" class="btn btn-upload">📁 Carregar Ficha (.json)</label>
-        <input type="file" id="input-upload-data" accept=".json">
       </div>
 
     </div>
@@ -540,7 +529,7 @@
       renderCard();
     });
 
-    // Download PNG Mobile com SVG nativo
+    // Exportação PNG
     document.getElementById('btn-download-png').addEventListener('click', async () => {
       const element = document.getElementById('card-to-export');
       const nomeJogador = document.getElementById('input-name').value.trim() || 'Jogador';
@@ -571,40 +560,12 @@
         link.click();
         link.remove();
       } catch (err) {
-        console.error('Erro ao gerar imagem:', err);
+        console.error('Erro ao exportar PNG:', err);
         alert('Houve um problema ao salvar a imagem. Tente novamente.');
       } finally {
         btn.textContent = '🖼️ Baixar Ficha em PNG';
         btn.disabled = false;
       }
-    });
-
-    // Upload JSON
-    document.getElementById('input-upload-data').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        try {
-          const loadedData = JSON.parse(event.target.result);
-          
-          document.getElementById('input-name').value = loadedData.name || '';
-          document.getElementById('input-flag').value = loadedData.flag || '';
-          document.getElementById('input-country').value = loadedData.country || '';
-          document.getElementById('input-position').value = loadedData.position || 'linha';
-          document.getElementById('input-playstyle').value = loadedData.playstyle || '';
-          
-          currentValues = loadedData.attributes || {};
-          
-          renderInputs();
-          renderCard();
-        } catch (error) {
-          alert('Arquivo JSON inválido!');
-        }
-      };
-      reader.readAsText(file);
-      this.value = '';
     });
 
     // Boot inicial
