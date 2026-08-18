@@ -88,7 +88,7 @@
       border: 1px solid #334155;
       background: #0b1329;
       color: #fff;
-      font-size: 16px; /* Evita zoom automático no iOS */
+      font-size: 16px;
       -webkit-appearance: none;
       appearance: none;
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -156,7 +156,7 @@
       padding: 0;
       border-radius: 6px;
       font-weight: 700;
-      font-size: 16px; /* Evita zoom iOS */
+      font-size: 16px;
       text-align: center;
     }
 
@@ -248,12 +248,7 @@
       background: #ffffff;
       width: 100%;
       padding: 18px 16px;
-      clip-path: polygon(
-        20px 0%, calc(100% - 20px) 0%, 
-        100% 20px, 100% calc(100% - 20px), 
-        calc(100% - 20px) 100%, 20px 100%, 
-        0% calc(100% - 20px), 0% 20px
-      );
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -308,7 +303,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      min-height: 34px;
+      min-height: 36px;
     }
 
     .attribute-label {
@@ -318,24 +313,12 @@
       color: #1e475b;
     }
 
-    .hexagon-badge {
-      width: 42px;
-      height: 34px;
-      background-color: #2ec4b6;
-      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      font-family: 'Rubik', sans-serif;
-      font-weight: 900;
-      font-size: 1.1rem;
-      letter-spacing: -0.5px;
+    .hexagon-svg {
+      width: 44px;
+      height: 36px;
+      display: block;
+      flex-shrink: 0;
     }
-
-    .badge-green  { background-color: #20b2aa; }
-    .badge-orange { background-color: #f58220; }
-    .badge-red    { background-color: #eb4d4b; }
 
     .card-footer {
       margin-top: 12px;
@@ -353,7 +336,6 @@
       word-break: break-word;
     }
 
-    /* Otimização Responsiva Mobile First */
     @media (max-width: 768px) {
       .app-container {
         flex-direction: column;
@@ -473,10 +455,10 @@
 
     let currentValues = {};
 
-    function getBadgeClass(value) {
-      if (value >= 5) return 'badge-green';
-      if (value >= 3) return 'badge-orange';
-      return 'badge-red';
+    function getBadgeColor(value) {
+      if (value >= 5) return '#20b2aa';
+      if (value >= 3) return '#f58220';
+      return '#eb4d4b';
     }
 
     function renderInputs() {
@@ -507,7 +489,6 @@
         const inputEl = box.querySelector('input');
         inputEl.addEventListener('input', (e) => {
           let val = e.target.value;
-          // Aceita apenas números e o sinal de negativo no início
           if (val === '-' || val === '') {
             currentValues[attr.id] = val;
           } else {
@@ -535,13 +516,16 @@
       attributes.forEach(attr => {
         const val = currentValues[attr.id] !== undefined ? currentValues[attr.id] : attr.default;
         const numVal = parseInt(val, 10) || 0;
-        const colorClass = getBadgeClass(numVal);
+        const fillColor = getBadgeColor(numVal);
 
         const row = document.createElement('div');
         row.className = 'attribute-row';
         row.innerHTML = `
           <span class="attribute-label">${attr.label}</span>
-          <div class="hexagon-badge ${colorClass}">${val}</div>
+          <svg class="hexagon-svg" viewBox="0 0 44 36" width="44" height="36" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="11,0 33,0 44,18 33,36 11,36 0,18" fill="${fillColor}" />
+            <text x="22" y="19" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-family="'Rubik', sans-serif" font-weight="900" font-size="16" letter-spacing="-0.5">${val}</text>
+          </svg>
         `;
         listContainer.appendChild(row);
       });
@@ -556,7 +540,7 @@
       renderCard();
     });
 
-    // Download PNG Mobile
+    // Download PNG Mobile com SVG nativo
     document.getElementById('btn-download-png').addEventListener('click', async () => {
       const element = document.getElementById('card-to-export');
       const nomeJogador = document.getElementById('input-name').value.trim() || 'Jogador';
