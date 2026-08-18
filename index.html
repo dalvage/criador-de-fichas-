@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Criador de Ficha de Jogador</title>
   
   <!-- Fontes -->
@@ -26,37 +26,42 @@
       color: #fff;
       display: flex;
       justify-content: center;
-      padding: 30px 15px;
+      padding: 20px 10px;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     .app-container {
       display: flex;
-      gap: 40px;
+      gap: 30px;
       max-width: 1000px;
       width: 100%;
       align-items: flex-start;
+      justify-content: center;
       flex-wrap: wrap;
     }
 
     /* Painel de Edição e Ações */
     .editor-panel {
       background: #1e293b;
-      padding: 24px;
+      padding: 20px;
       border-radius: 12px;
       flex: 1;
-      min-width: 320px;
+      min-width: 300px;
+      max-width: 480px;
+      width: 100%;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
 
     .editor-panel h2 {
       font-size: 1.3rem;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       color: #38bdf8;
+      text-align: center;
     }
 
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .form-group label {
@@ -74,7 +79,8 @@
       border: 1px solid #334155;
       background: #0f172a;
       color: #fff;
-      font-size: 0.95rem;
+      font-size: 1rem;
+      -webkit-appearance: none;
     }
 
     .form-group input:focus, .form-group select:focus {
@@ -85,22 +91,25 @@
     .attributes-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 15px;
+      gap: 8px;
+      margin-top: 10px;
     }
 
     .attr-input-box {
       background: #0f172a;
-      padding: 8px 10px;
+      padding: 8px;
       border-radius: 6px;
       border: 1px solid #334155;
     }
 
     .attr-input-box label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: #cbd5e1;
       display: block;
       margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .attr-input-box input {
@@ -108,16 +117,17 @@
       background: #1e293b;
       border: 1px solid #475569;
       color: #fff;
-      padding: 4px 8px;
+      padding: 6px 4px;
       border-radius: 4px;
       font-weight: bold;
+      font-size: 1rem;
       text-align: center;
     }
 
     /* Botões de Ação */
     .actions-panel {
-      margin-top: 25px;
-      padding-top: 20px;
+      margin-top: 20px;
+      padding-top: 16px;
       border-top: 1px solid #334155;
       display: flex;
       flex-direction: column;
@@ -126,34 +136,44 @@
 
     .btn {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
       text-align: center;
-      transition: opacity 0.2s;
-      font-size: 0.95rem;
+      transition: opacity 0.2s, transform 0.1s;
+      font-size: 1rem;
+      touch-action: manipulation;
     }
 
-    .btn:hover { opacity: 0.8; }
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     
-    .btn-pdf { background-color: #e11d48; color: #fff; } /* Vermelho PDF */
-    .btn-save { background-color: #0284c7; color: #fff; } /* Azul Salvar */
-    .btn-upload { background-color: #10b981; color: #fff; display: block; } /* Verde Upload */
+    .btn-pdf { background-color: #e11d48; color: #fff; }
+    .btn-save { background-color: #0284c7; color: #fff; }
+    .btn-upload { background-color: #10b981; color: #fff; display: block; }
     
     input[type="file"] { display: none; }
 
-    /* Design do Card */
+    /* Pré-visualização */
     .preview-container {
       display: flex;
       justify-content: center;
       align-items: center;
       flex: 1;
       min-width: 320px;
+      width: 100%;
+      padding-bottom: 20px;
     }
 
-    /* ID usado para exportar o PDF */
+    /* Elemento que será transformado em PDF */
     #card-to-pdf {
       width: 320px;
       background-color: #1e475b;
@@ -163,6 +183,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      transform-origin: top center;
     }
 
     .card-inner {
@@ -190,7 +211,7 @@
       text-transform: uppercase;
       letter-spacing: -0.5px;
       line-height: 1;
-      word-break: break-all;
+      word-break: break-word;
     }
 
     .country-tag { display: flex; align-items: center; gap: 8px; }
@@ -221,14 +242,14 @@
 
     .attribute-label {
       font-family: 'Fredoka', sans-serif;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #1e475b;
     }
 
     .hexagon-badge {
-      width: 40px;
-      height: 34px;
+      width: 44px;
+      height: 36px;
       background-color: #2ec4b6;
       clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
       display: flex;
@@ -237,7 +258,8 @@
       color: #ffffff;
       font-family: 'Rubik', sans-serif;
       font-weight: 900;
-      font-size: 1.35rem;
+      font-size: 1.15rem;
+      letter-spacing: -0.5px;
     }
 
     .badge-green  { background-color: #20b2aa; }
@@ -253,10 +275,30 @@
     .playstyle-text {
       font-family: 'Silkscreen', monospace;
       color: #ced6e0;
-      font-size: 1.1rem;
-      letter-spacing: 2px;
+      font-size: 1.05rem;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
       text-shadow: 0 0 1px rgba(255,255,255,0.4);
+      word-break: break-word;
+    }
+
+    /* Ajustes específicos para telas mobile pequenas */
+    @media (max-width: 680px) {
+      .app-container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .editor-panel {
+        order: 2;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .preview-container {
+        order: 1;
+        margin-bottom: 10px;
+      }
     }
   </style>
 </head>
@@ -264,16 +306,39 @@
 
   <div class="app-container">
     
+    <!-- Pré-visualização da Ficha -->
+    <div class="preview-container">
+      <div id="card-to-pdf">
+        <div class="card-inner">
+          <div class="card-header">
+            <div class="player-name" id="view-name">FERREIRA</div>
+            <div class="country-tag">
+              <span class="country-flag" id="view-flag">🇧🇷</span>
+              <span class="country-name" id="view-country">BRAZIL</span>
+            </div>
+          </div>
+
+          <div class="attributes-list" id="view-attributes-list">
+            <!-- Gerado via JavaScript -->
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="playstyle-text" id="view-playstyle">COUNTER ATTACK</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Painel de Configurações -->
     <div class="editor-panel">
-      <h2>Montagem de Ficha</h2>
+      <h2>Editor da Ficha</h2>
 
       <div class="form-group">
         <label>Nome do Jogador</label>
         <input type="text" id="input-name" value="FERREIRA">
       </div>
 
-      <div style="display: grid; grid-template-columns: 80px 1fr; gap: 10px;">
+      <div style="display: grid; grid-template-columns: 75px 1fr; gap: 10px;">
         <div class="form-group">
           <label>Bandeira</label>
           <input type="text" id="input-flag" value="🇧🇷">
@@ -297,43 +362,20 @@
         <input type="text" id="input-playstyle" value="COUNTER ATTACK">
       </div>
 
-      <label style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Valores dos Atributos</label>
+      <label style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Atributos (Aceita negativos como -2)</label>
       <div class="attributes-grid" id="attr-inputs-container">
         <!-- Gerado via JavaScript -->
       </div>
 
-      <!-- PAINEL DE AÇÕES (DOWNLOAD / UPLOAD) -->
+      <!-- PAINEL DE AÇÕES -->
       <div class="actions-panel">
-        <button class="btn btn-pdf" id="btn-download-pdf">📄 Baixar Imagem/PDF</button>
-        <button class="btn btn-save" id="btn-save-data">💾 Salvar Ficha (.json)</button>
+        <button class="btn btn-pdf" id="btn-download-pdf">📄 Baixar Ficha em PDF</button>
+        <button class="btn btn-save" id="btn-save-data">💾 Salvar Dados (.json)</button>
         
-        <label for="input-upload-data" class="btn btn-upload">📁 Carregar Ficha (.json)</label>
+        <label for="input-upload-data" class="btn btn-upload">📁 Carregar Dados (.json)</label>
         <input type="file" id="input-upload-data" accept=".json">
       </div>
 
-    </div>
-
-    <!-- Pré-visualização da Ficha -->
-    <div class="preview-container">
-      <div id="card-to-pdf">
-        <div class="card-inner">
-          <div class="card-header">
-            <div class="player-name" id="view-name">FERREIRA</div>
-            <div class="country-tag">
-              <span class="country-flag" id="view-flag">🇧🇷</span>
-              <span class="country-name" id="view-country">BRAZIL</span>
-            </div>
-          </div>
-
-          <div class="attributes-list" id="view-attributes-list">
-            <!-- Gerado via JavaScript -->
-          </div>
-        </div>
-
-        <div class="card-footer">
-          <div class="playstyle-text" id="view-playstyle">COUNTER ATTACK</div>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -367,7 +409,7 @@
     function getBadgeClass(value) {
       if (value >= 5) return 'badge-green';
       if (value >= 3) return 'badge-orange';
-      return 'badge-red';
+      return 'badge-red'; // Valores menores que 3, incluindo 0 e negativos (-1, -2...)
     }
 
     function renderInputs() {
@@ -385,11 +427,16 @@
         box.className = 'attr-input-box';
         box.innerHTML = `
           <label>${attr.label}</label>
-          <input type="number" min="1" max="9" value="${currentValues[attr.id]}" data-id="${attr.id}">
+          <input type="number" step="1" value="${currentValues[attr.id]}" data-id="${attr.id}">
         `;
 
         box.querySelector('input').addEventListener('input', (e) => {
-          currentValues[attr.id] = parseInt(e.target.value) || 0;
+          const val = e.target.value;
+          if (val === '-' || val === '') {
+            currentValues[attr.id] = val;
+          } else {
+            currentValues[attr.id] = parseInt(val, 10) || 0;
+          }
           renderCard();
         });
 
@@ -409,8 +456,9 @@
       listContainer.innerHTML = '';
 
       attributes.forEach(attr => {
-        const val = currentValues[attr.id] !== undefined ? currentValues[attr.id] : attr.default;
-        const colorClass = getBadgeClass(val);
+        let val = currentValues[attr.id] !== undefined ? currentValues[attr.id] : attr.default;
+        const numVal = parseInt(val, 10) || 0;
+        const colorClass = getBadgeClass(numVal);
 
         const row = document.createElement('div');
         row.className = 'attribute-row';
@@ -439,24 +487,44 @@
        SISTEMA DE DOWNLOAD PDF E UPLOAD JSON 
        ========================================= */
 
-    // 1. Gerar e Baixar o PDF da Ficha
+    // 1. Download de PDF Otimizado para Mobile
     document.getElementById('btn-download-pdf').addEventListener('click', () => {
       const element = document.getElementById('card-to-pdf');
-      const nomeJogador = document.getElementById('input-name').value || 'Jogador';
+      const nomeJogador = document.getElementById('input-name').value.trim() || 'Jogador';
+      const btn = document.getElementById('btn-download-pdf');
       
-      // Configuração para gerar um PDF com tamanho exato da carta
+      btn.textContent = '⏳ Gerando PDF...';
+      btn.disabled = true;
+
       const opt = {
-        margin:       0,
-        filename:     `Ficha_${nomeJogador}.pdf`,
-        image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { scale: 3, useCORS: true, backgroundColor: '#1e475b' },
-        jsPDF:        { unit: 'px', format: [320, element.offsetHeight], orientation: 'portrait' }
+        margin: 0,
+        filename: `Ficha_${nomeJogador}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 3, 
+          useCORS: true, 
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF: { 
+          unit: 'px', 
+          format: [320, element.offsetHeight], 
+          orientation: 'portrait' 
+        }
       };
 
-      html2pdf().set(opt).from(element).save();
+      html2pdf().set(opt).from(element).save().then(() => {
+        btn.textContent = '📄 Baixar Ficha em PDF';
+        btn.disabled = false;
+      }).catch(err => {
+        console.error(err);
+        btn.textContent = '📄 Baixar Ficha em PDF';
+        btn.disabled = false;
+        alert('Houve um problema ao gerar o PDF. Tente novamente.');
+      });
     });
 
-    // 2. Salvar Ficha (Exportar Dados em JSON)
+    // 2. Salvar Ficha (JSON)
     document.getElementById('btn-save-data').addEventListener('click', () => {
       const fichaData = {
         name: document.getElementById('input-name').value,
@@ -471,12 +539,12 @@
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
       downloadAnchorNode.setAttribute("download", `Ficha_Dados_${fichaData.name}.json`);
-      document.body.appendChild(downloadAnchorNode); // Requerido para Firefox
+      document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
     });
 
-    // 3. Carregar Ficha (Fazer Upload do JSON)
+    // 3. Carregar Ficha (Upload JSON)
     document.getElementById('input-upload-data').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -486,28 +554,23 @@
         try {
           const loadedData = JSON.parse(e.target.result);
           
-          // Preenche os campos de texto
           document.getElementById('input-name').value = loadedData.name || '';
           document.getElementById('input-flag').value = loadedData.flag || '';
           document.getElementById('input-country').value = loadedData.country || '';
           document.getElementById('input-position').value = loadedData.position || 'linha';
           document.getElementById('input-playstyle').value = loadedData.playstyle || '';
           
-          // Restaura os atributos
           currentValues = loadedData.attributes || {};
           
-          // Atualiza a tela
           renderInputs();
           renderCard();
           
           alert("Ficha carregada com sucesso!");
         } catch (error) {
-          alert("Erro ao ler o arquivo! Certifique-se de que é um arquivo .json de ficha válido.");
+          alert("Arquivo inválido!");
         }
       };
       reader.readAsText(file);
-      
-      // Reseta o input para permitir carregar o mesmo arquivo novamente, se necessário
       this.value = '';
     });
   </script>
