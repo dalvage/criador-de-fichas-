@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Criador de Ficha de Jogador</title>
   
   <!-- Fontes -->
@@ -10,30 +10,32 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Silkscreen&family=Rubik:wght@700;900&display=swap" rel="stylesheet">
   
-  <!-- Biblioteca para gerar PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Biblioteca para captura e geração de imagem PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: #111a22;
+      background: #0f172a;
       color: #fff;
       display: flex;
       justify-content: center;
-      padding: 20px 10px;
+      padding: 16px 12px calc(16px + env(safe-area-inset-bottom)) 12px;
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
     }
 
     .app-container {
       display: flex;
-      gap: 30px;
+      gap: 24px;
       max-width: 1000px;
       width: 100%;
       align-items: flex-start;
@@ -44,20 +46,23 @@
     /* Painel de Edição e Ações */
     .editor-panel {
       background: #1e293b;
-      padding: 20px;
-      border-radius: 12px;
+      padding: 18px 16px;
+      border-radius: 16px;
       flex: 1;
-      min-width: 300px;
+      min-width: 280px;
       max-width: 480px;
       width: 100%;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      border: 1px solid #334155;
     }
 
     .editor-panel h2 {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       margin-bottom: 16px;
       color: #38bdf8;
       text-align: center;
+      font-weight: 700;
+      letter-spacing: -0.5px;
     }
 
     .form-group {
@@ -66,68 +71,104 @@
 
     .form-group label {
       display: block;
-      font-size: 0.85rem;
-      margin-bottom: 6px;
+      font-size: 0.8rem;
+      margin-bottom: 5px;
       color: #94a3b8;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .form-group input, .form-group select {
+    .form-group input, 
+    .form-group select {
       width: 100%;
-      padding: 10px 12px;
-      border-radius: 6px;
+      height: 44px;
+      padding: 0 12px;
+      border-radius: 8px;
       border: 1px solid #334155;
-      background: #0f172a;
+      background: #0b1329;
       color: #fff;
-      font-size: 1rem;
+      font-size: 16px; /* Evita zoom automático no iOS */
       -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .form-group input:focus, .form-group select:focus {
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 18px;
+      padding-right: 36px;
+    }
+
+    .form-group input:focus, 
+    .form-group select:focus {
       border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
       outline: none;
+    }
+
+    .attributes-section-label {
+      display: block;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 14px;
+      margin-bottom: 6px;
     }
 
     .attributes-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
-      margin-top: 10px;
     }
 
     .attr-input-box {
-      background: #0f172a;
+      background: #0b1329;
       padding: 8px;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .attr-input-box label {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: #cbd5e1;
       display: block;
       margin-bottom: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-weight: 500;
     }
 
     .attr-input-box input {
       width: 100%;
+      height: 38px;
       background: #1e293b;
       border: 1px solid #475569;
       color: #fff;
-      padding: 6px 4px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 1rem;
+      padding: 0;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 16px; /* Evita zoom iOS */
       text-align: center;
+    }
+
+    .attr-input-box input:focus {
+      border-color: #38bdf8;
+      outline: none;
     }
 
     /* Botões de Ação */
     .actions-panel {
-      margin-top: 20px;
-      padding-top: 16px;
+      margin-top: 18px;
+      padding-top: 14px;
       border-top: 1px solid #334155;
       display: flex;
       flex-direction: column;
@@ -136,31 +177,47 @@
 
     .btn {
       width: 100%;
-      padding: 14px;
+      min-height: 48px;
+      padding: 12px;
       border: none;
-      border-radius: 8px;
-      font-weight: bold;
+      border-radius: 10px;
+      font-weight: 700;
       cursor: pointer;
       text-align: center;
-      transition: opacity 0.2s, transform 0.1s;
-      font-size: 1rem;
+      transition: transform 0.1s ease, filter 0.2s ease, opacity 0.2s ease;
+      font-size: 0.95rem;
       touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .btn:active {
       transform: scale(0.98);
+      filter: brightness(0.9);
     }
 
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
     
-    .btn-pdf { background-color: #e11d48; color: #fff; }
-    .btn-save { background-color: #0284c7; color: #fff; }
-    .btn-upload { background-color: #10b981; color: #fff; display: block; }
+    .btn-png { 
+      background-color: #0284c7; 
+      color: #ffffff; 
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    }
     
-    input[type="file"] { display: none; }
+    .btn-upload { 
+      background-color: #334155; 
+      color: #cbd5e1; 
+    }
+    
+    input[type="file"] { 
+      display: none; 
+    }
 
     /* Pré-visualização */
     .preview-container {
@@ -168,44 +225,49 @@
       justify-content: center;
       align-items: center;
       flex: 1;
-      min-width: 320px;
+      min-width: 280px;
       width: 100%;
-      padding-bottom: 20px;
+      padding-bottom: 10px;
     }
 
-    /* Elemento que será transformado em PDF */
-    #card-to-pdf {
-      width: 320px;
+    /* Elemento que será transformado em Imagem */
+    #card-to-export {
+      width: 100%;
+      max-width: 320px;
       background-color: #1e475b;
       border-radius: 18px;
-      padding: 22px 18px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      padding: 20px 16px;
+      box-shadow: 0 16px 32px rgba(0,0,0,0.5);
       display: flex;
       flex-direction: column;
       align-items: center;
-      transform-origin: top center;
+      user-select: none;
     }
 
     .card-inner {
       background: #ffffff;
       width: 100%;
-      padding: 20px 18px;
+      padding: 18px 16px;
       clip-path: polygon(
-        22px 0%, calc(100% - 22px) 0%, 
-        100% 22px, 100% calc(100% - 22px), 
-        calc(100% - 22px) 100%, 22px 100%, 
-        0% calc(100% - 22px), 0% 22px
+        20px 0%, calc(100% - 20px) 0%, 
+        100% 20px, 100% calc(100% - 20px), 
+        calc(100% - 20px) 100%, 20px 100%, 
+        0% calc(100% - 20px), 0% 20px
       );
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .card-header { display: flex; flex-direction: column; gap: 4px; }
+    .card-header { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 4px; 
+    }
 
     .player-name {
       font-family: 'Rubik', sans-serif;
-      font-size: 1.9rem;
+      font-size: 1.8rem;
       font-weight: 900;
       color: #1e475b;
       text-transform: uppercase;
@@ -214,13 +276,21 @@
       word-break: break-word;
     }
 
-    .country-tag { display: flex; align-items: center; gap: 8px; }
-    .country-flag { font-size: 1.5rem; line-height: 1; }
+    .country-tag { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+    }
+    
+    .country-flag { 
+      font-size: 1.4rem; 
+      line-height: 1; 
+    }
     
     .country-name {
       font-family: 'Rubik', sans-serif;
       font-weight: 900;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       color: #15803d;
       font-style: italic;
       text-transform: uppercase;
@@ -230,7 +300,7 @@
     .attributes-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       margin-top: 4px;
     }
 
@@ -238,18 +308,19 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      min-height: 34px;
     }
 
     .attribute-label {
       font-family: 'Fredoka', sans-serif;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: #1e475b;
     }
 
     .hexagon-badge {
-      width: 44px;
-      height: 36px;
+      width: 42px;
+      height: 34px;
       background-color: #2ec4b6;
       clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
       display: flex;
@@ -258,7 +329,7 @@
       color: #ffffff;
       font-family: 'Rubik', sans-serif;
       font-weight: 900;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       letter-spacing: -0.5px;
     }
 
@@ -267,7 +338,7 @@
     .badge-red    { background-color: #eb4d4b; }
 
     .card-footer {
-      margin-top: 14px;
+      margin-top: 12px;
       width: 100%;
       text-align: center;
     }
@@ -275,29 +346,31 @@
     .playstyle-text {
       font-family: 'Silkscreen', monospace;
       color: #ced6e0;
-      font-size: 1.05rem;
-      letter-spacing: 1.5px;
+      font-size: 0.95rem;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
       text-shadow: 0 0 1px rgba(255,255,255,0.4);
       word-break: break-word;
     }
 
-    /* Ajustes específicos para telas mobile pequenas */
-    @media (max-width: 680px) {
+    /* Otimização Responsiva Mobile First */
+    @media (max-width: 768px) {
       .app-container {
         flex-direction: column;
         align-items: center;
+        gap: 16px;
+      }
+
+      .preview-container {
+        order: 1;
+        width: 100%;
+        margin-bottom: 0;
       }
 
       .editor-panel {
         order: 2;
         width: 100%;
         max-width: 100%;
-      }
-
-      .preview-container {
-        order: 1;
-        margin-bottom: 10px;
       }
     }
   </style>
@@ -308,7 +381,7 @@
     
     <!-- Pré-visualização da Ficha -->
     <div class="preview-container">
-      <div id="card-to-pdf">
+      <div id="card-to-export">
         <div class="card-inner">
           <div class="card-header">
             <div class="player-name" id="view-name">FERREIRA</div>
@@ -318,9 +391,7 @@
             </div>
           </div>
 
-          <div class="attributes-list" id="view-attributes-list">
-            <!-- Gerado via JavaScript -->
-          </div>
+          <div class="attributes-list" id="view-attributes-list"></div>
         </div>
 
         <div class="card-footer">
@@ -334,23 +405,23 @@
       <h2>Editor da Ficha</h2>
 
       <div class="form-group">
-        <label>Nome do Jogador</label>
-        <input type="text" id="input-name" value="FERREIRA">
+        <label for="input-name">Nome do Jogador</label>
+        <input type="text" id="input-name" value="FERREIRA" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <div style="display: grid; grid-template-columns: 75px 1fr; gap: 10px;">
+      <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
         <div class="form-group">
-          <label>Bandeira</label>
-          <input type="text" id="input-flag" value="🇧🇷">
+          <label for="input-flag">Bandeira</label>
+          <input type="text" id="input-flag" value="🇧🇷" autocomplete="off">
         </div>
         <div class="form-group">
-          <label>País</label>
-          <input type="text" id="input-country" value="BRAZIL">
+          <label for="input-country">País</label>
+          <input type="text" id="input-country" value="BRAZIL" autocomplete="off" autocorrect="off" spellcheck="false">
         </div>
       </div>
 
       <div class="form-group">
-        <label>Posição</label>
+        <label for="input-position">Posição</label>
         <select id="input-position">
           <option value="linha">Jogador de Linha</option>
           <option value="goleiro">Goleiro</option>
@@ -358,21 +429,17 @@
       </div>
 
       <div class="form-group">
-        <label>Estilo / Subtítulo</label>
-        <input type="text" id="input-playstyle" value="COUNTER ATTACK">
+        <label for="input-playstyle">Estilo / Subtítulo</label>
+        <input type="text" id="input-playstyle" value="COUNTER ATTACK" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <label style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Atributos (Aceita negativos como -2)</label>
-      <div class="attributes-grid" id="attr-inputs-container">
-        <!-- Gerado via JavaScript -->
-      </div>
+      <span class="attributes-section-label">Atributos (Aceita negativos como -2)</span>
+      <div class="attributes-grid" id="attr-inputs-container"></div>
 
-      <!-- PAINEL DE AÇÕES -->
+      <!-- Ações -->
       <div class="actions-panel">
-        <button class="btn btn-pdf" id="btn-download-pdf">📄 Baixar Ficha em PDF</button>
-        <button class="btn btn-save" id="btn-save-data">💾 Salvar Dados (.json)</button>
-        
-        <label for="input-upload-data" class="btn btn-upload">📁 Carregar Dados (.json)</label>
+        <button type="button" class="btn btn-png" id="btn-download-png">🖼️ Baixar Ficha em PNG</button>
+        <label for="input-upload-data" class="btn btn-upload">📁 Carregar Ficha (.json)</label>
         <input type="file" id="input-upload-data" accept=".json">
       </div>
 
@@ -409,7 +476,7 @@
     function getBadgeClass(value) {
       if (value >= 5) return 'badge-green';
       if (value >= 3) return 'badge-orange';
-      return 'badge-red'; // Valores menores que 3, incluindo 0 e negativos (-1, -2...)
+      return 'badge-red';
     }
 
     function renderInputs() {
@@ -426,16 +493,26 @@
         const box = document.createElement('div');
         box.className = 'attr-input-box';
         box.innerHTML = `
-          <label>${attr.label}</label>
-          <input type="number" step="1" value="${currentValues[attr.id]}" data-id="${attr.id}">
+          <label for="attr-${attr.id}">${attr.label}</label>
+          <input 
+            type="text" 
+            inputmode="text" 
+            id="attr-${attr.id}" 
+            value="${currentValues[attr.id]}" 
+            data-id="${attr.id}" 
+            maxlength="4"
+          >
         `;
 
-        box.querySelector('input').addEventListener('input', (e) => {
-          const val = e.target.value;
+        const inputEl = box.querySelector('input');
+        inputEl.addEventListener('input', (e) => {
+          let val = e.target.value;
+          // Aceita apenas números e o sinal de negativo no início
           if (val === '-' || val === '') {
             currentValues[attr.id] = val;
           } else {
-            currentValues[attr.id] = parseInt(val, 10) || 0;
+            const parsed = parseInt(val, 10);
+            currentValues[attr.id] = isNaN(parsed) ? 0 : parsed;
           }
           renderCard();
         });
@@ -445,10 +522,10 @@
     }
 
     function renderCard() {
-      document.getElementById('view-name').textContent = document.getElementById('input-name').value || 'JOGADOR';
+      document.getElementById('view-name').textContent = document.getElementById('input-name').value.trim() || 'JOGADOR';
       document.getElementById('view-flag').textContent = document.getElementById('input-flag').value;
-      document.getElementById('view-country').textContent = document.getElementById('input-country').value || 'PAÍS';
-      document.getElementById('view-playstyle').textContent = document.getElementById('input-playstyle').value || 'ESTILO';
+      document.getElementById('view-country').textContent = document.getElementById('input-country').value.trim() || 'PAÍS';
+      document.getElementById('view-playstyle').textContent = document.getElementById('input-playstyle').value.trim() || 'ESTILO';
 
       const position = document.getElementById('input-position').value;
       const attributes = attributeTemplates[position];
@@ -456,7 +533,7 @@
       listContainer.innerHTML = '';
 
       attributes.forEach(attr => {
-        let val = currentValues[attr.id] !== undefined ? currentValues[attr.id] : attr.default;
+        const val = currentValues[attr.id] !== undefined ? currentValues[attr.id] : attr.default;
         const numVal = parseInt(val, 10) || 0;
         const colorClass = getBadgeClass(numVal);
 
@@ -479,80 +556,54 @@
       renderCard();
     });
 
-    // Inicialização
-    renderInputs();
-    renderCard();
-
-    /* =========================================
-       SISTEMA DE DOWNLOAD PDF E UPLOAD JSON 
-       ========================================= */
-
-    // 1. Download de PDF Otimizado para Mobile
-    document.getElementById('btn-download-pdf').addEventListener('click', () => {
-      const element = document.getElementById('card-to-pdf');
+    // Download PNG Mobile
+    document.getElementById('btn-download-png').addEventListener('click', async () => {
+      const element = document.getElementById('card-to-export');
       const nomeJogador = document.getElementById('input-name').value.trim() || 'Jogador';
-      const btn = document.getElementById('btn-download-pdf');
+      const btn = document.getElementById('btn-download-png');
       
-      btn.textContent = '⏳ Gerando PDF...';
+      btn.textContent = '⏳ Renderizando...';
       btn.disabled = true;
 
-      const opt = {
-        margin: 0,
-        filename: `Ficha_${nomeJogador}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 3, 
-          useCORS: true, 
+      try {
+        if (document.fonts) {
+          await document.fonts.ready;
+        }
+
+        const canvas = await html2canvas(element, {
+          scale: 3,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false,
           scrollY: 0,
           scrollX: 0
-        },
-        jsPDF: { 
-          unit: 'px', 
-          format: [320, element.offsetHeight], 
-          orientation: 'portrait' 
-        }
-      };
+        });
 
-      html2pdf().set(opt).from(element).save().then(() => {
-        btn.textContent = '📄 Baixar Ficha em PDF';
+        const link = document.createElement('a');
+        const sanitizedName = nomeJogador.replace(/[^a-zA-Z0-9_\-]/g, '_');
+        link.download = `Ficha_${sanitizedName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (err) {
+        console.error('Erro ao gerar imagem:', err);
+        alert('Houve um problema ao salvar a imagem. Tente novamente.');
+      } finally {
+        btn.textContent = '🖼️ Baixar Ficha em PNG';
         btn.disabled = false;
-      }).catch(err => {
-        console.error(err);
-        btn.textContent = '📄 Baixar Ficha em PDF';
-        btn.disabled = false;
-        alert('Houve um problema ao gerar o PDF. Tente novamente.');
-      });
+      }
     });
 
-    // 2. Salvar Ficha (JSON)
-    document.getElementById('btn-save-data').addEventListener('click', () => {
-      const fichaData = {
-        name: document.getElementById('input-name').value,
-        flag: document.getElementById('input-flag').value,
-        country: document.getElementById('input-country').value,
-        position: document.getElementById('input-position').value,
-        playstyle: document.getElementById('input-playstyle').value,
-        attributes: currentValues
-      };
-
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fichaData));
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", `Ficha_Dados_${fichaData.name}.json`);
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
-    });
-
-    // 3. Carregar Ficha (Upload JSON)
+    // Upload JSON
     document.getElementById('input-upload-data').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = function(event) {
         try {
-          const loadedData = JSON.parse(e.target.result);
+          const loadedData = JSON.parse(event.target.result);
           
           document.getElementById('input-name').value = loadedData.name || '';
           document.getElementById('input-flag').value = loadedData.flag || '';
@@ -564,15 +615,17 @@
           
           renderInputs();
           renderCard();
-          
-          alert("Ficha carregada com sucesso!");
         } catch (error) {
-          alert("Arquivo inválido!");
+          alert('Arquivo JSON inválido!');
         }
       };
       reader.readAsText(file);
       this.value = '';
     });
+
+    // Boot inicial
+    renderInputs();
+    renderCard();
   </script>
 </body>
 </html>
