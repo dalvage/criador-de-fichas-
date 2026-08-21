@@ -109,34 +109,15 @@
       outline: none;
     }
 
-    /* Banner de Pontos */
-    .points-banner {
-      background: #0b1329;
-      border: 1px solid #38bdf8;
-      border-radius: 10px;
-      padding: 10px 14px;
-      text-align: center;
+    .section-title {
       font-size: 0.85rem;
-      color: #e2e8f0;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       margin-top: 14px;
-      margin-bottom: 10px;
-      transition: all 0.2s ease;
-    }
-
-    .points-banner.locked {
-      border-color: #f58220;
-      background: #1c1917;
-      color: #fdba74;
-    }
-
-    .points-highlight {
-      font-weight: 800;
-      font-size: 1.1rem;
-      color: #38bdf8;
-    }
-
-    .points-banner.locked .points-highlight {
-      color: #f97316;
+      margin-bottom: 8px;
+      display: block;
     }
 
     .attributes-grid {
@@ -189,13 +170,8 @@
       transition: background 0.15s;
     }
 
-    .step-btn:hover:not(:disabled) {
+    .step-btn:hover {
       background: #475569;
-    }
-
-    .step-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
     }
 
     .attr-input-box input {
@@ -457,11 +433,7 @@
         <input type="text" id="input-playstyle" value="COUNTER ATTACK" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <!-- Banner de Distribuição de Pontos -->
-      <div class="points-banner" id="points-banner">
-        Você tem <span class="points-highlight" id="points-remaining">10</span> pontos disponíveis para distribuir à vontade
-      </div>
-
+      <span class="section-title">Atributos</span>
       <div class="attributes-grid" id="attr-inputs-container"></div>
 
       <!-- Ações -->
@@ -474,8 +446,6 @@
   </div>
 
   <script>
-    const TOTAL_POINTS = 10;
-
     const attributeTemplates = {
       linha: [
         { id: "vel", label: "Velocidade", default: 0 },
@@ -500,46 +470,12 @@
 
     let currentValues = {};
 
-    function getRemainingPoints() {
-      const position = document.getElementById('input-position').value;
-      const attributes = attributeTemplates[position];
-      let spent = 0;
-      attributes.forEach(attr => {
-        spent += Math.max(0, parseInt(currentValues[attr.id], 10) || 0);
-      });
-      return TOTAL_POINTS - spent;
-    }
-
     function getBadgeColor(value) {
       if (value >= 9) return '#15803d'; // 9 e 10+ (Verde Escuro)
       if (value >= 7) return '#20b2aa'; // 7 e 8 (Verde Claro)
       if (value >= 5) return '#eab308'; // 5 e 6 (Amarelo)
       if (value >= 3) return '#f58220'; // 3 e 4 (Laranja)
       return '#eb4d4b';                // 0, 1 e 2 (Vermelho)
-    }
-
-    function updateBannerAndButtons() {
-      const remaining = getRemainingPoints();
-      const banner = document.getElementById('points-banner');
-
-      if (remaining <= 0) {
-        banner.classList.add('locked');
-        banner.innerHTML = `Pontos esgotados! (<span class="points-highlight">0</span> restantes - trancado)`;
-      } else {
-        banner.classList.remove('locked');
-        banner.innerHTML = `Você tem <span class="points-highlight">${remaining}</span> pontos disponíveis para distribuir à vontade`;
-      }
-
-      // Atualiza estado de trava dos botões sem recriar os campos
-      document.querySelectorAll('.step-btn.btn-inc').forEach(btn => {
-        btn.disabled = (remaining <= 0);
-      });
-
-      document.querySelectorAll('.step-btn.btn-dec').forEach(btn => {
-        const id = btn.getAttribute('data-id');
-        const val = parseInt(currentValues[id], 10) || 0;
-        btn.disabled = (val <= 0);
-      });
     }
 
     function buildInputs() {
@@ -566,7 +502,6 @@
               id="attr-${attr.id}" 
               value="${val}" 
               data-id="${attr.id}"
-              min="0"
             >
             <button type="button" class="step-btn btn-inc" data-id="${attr.id}">+</button>
           </div>
@@ -577,58 +512,40 @@
         // Botão Menos (-)
         box.querySelector('.btn-dec').addEventListener('click', () => {
           let curr = parseInt(currentValues[attr.id], 10) || 0;
-          if (curr > 0) {
-            currentValues[attr.id] = curr - 1;
-            inputEl.value = currentValues[attr.id];
-            updateBannerAndButtons();
-            renderCard();
-          }
+          currentValues[attr.id] = curr - 1;
+          inputEl.value = currentValues[attr.id];
+          renderCard();
         });
 
         // Botão Mais (+)
         box.querySelector('.btn-inc').addEventListener('click', () => {
-          if (getRemainingPoints() > 0) {
-            let curr = parseInt(currentValues[attr.id], 10) || 0;
-            currentValues[attr.id] = curr + 1;
-            inputEl.value = currentValues[attr.id];
-            updateBannerAndButtons();
-            renderCard();
-          }
-        });
-
-        // Sincronização em tempo real enquanto digita
-        inputEl.addEventListener('input', (e) => {
-          let typed = parseInt(e.target.value, 10);
-          if (isNaN(typed) || typed < 0) typed = 0;
-
-          const currentVal = parseInt(currentValues[attr.id], 10) || 0;
-          const currentRemaining = getRemainingPoints() + currentVal;
-
-          // Se passar dos pontos restantes, trava no máximo possível
-          if (typed > currentRemaining) {
-            typed = currentRemaining;
-            inputEl.value = typed;
-          }
-
-          currentValues[attr.id] = typed;
-          updateBannerAndButtons();
+          let curr = parseInt(currentValues[attr.id], 10) || 0;
+          currentValues[attr.id] = curr + 1;
+          inputEl.value = currentValues[attr.id];
           renderCard();
         });
 
-        // Garante valor numérico ao sair do campo
+        // Digitação livre com atualização em tempo real
+        inputEl.addEventListener('input', (e) => {
+          const raw = e.target.value;
+          if (raw === '' || raw === '-') {
+            currentValues[attr.id] = 0;
+          } else {
+            currentValues[attr.id] = parseInt(raw, 10) || 0;
+          }
+          renderCard();
+        });
+
         inputEl.addEventListener('blur', (e) => {
           if (e.target.value === '') {
             currentValues[attr.id] = 0;
             inputEl.value = 0;
-            updateBannerAndButtons();
             renderCard();
           }
         });
 
         container.appendChild(box);
       });
-
-      updateBannerAndButtons();
     }
 
     function renderCard() {
@@ -709,7 +626,7 @@
       }
     });
 
-    // Inicialização
+    // Boot inicial
     buildInputs();
     renderCard();
   </script>
