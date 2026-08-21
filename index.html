@@ -43,7 +43,7 @@
       flex-wrap: wrap;
     }
 
-    /* Painel de Edição e Ações */
+    /* Painel de Edição */
     .editor-panel {
       background: #1e293b;
       padding: 18px 16px;
@@ -109,15 +109,34 @@
       outline: none;
     }
 
-    .attributes-section-label {
-      display: block;
-      font-size: 0.8rem;
-      color: #94a3b8;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    /* Banner do Sistema de Pontos */
+    .points-banner {
+      background: #0b1329;
+      border: 1px solid #38bdf8;
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #e2e8f0;
       margin-top: 14px;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .points-banner.locked {
+      border-color: #f58220;
+      background: #1c1917;
+      color: #fdba74;
+    }
+
+    .points-highlight {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #38bdf8;
+    }
+
+    .points-banner.locked .points-highlight {
+      color: #f97316;
     }
 
     .attributes-grid {
@@ -134,17 +153,49 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      gap: 4px;
     }
 
     .attr-input-box label {
       font-size: 0.75rem;
       color: #cbd5e1;
       display: block;
-      margin-bottom: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       font-weight: 500;
+    }
+
+    .stepper-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .step-btn {
+      width: 34px;
+      height: 38px;
+      background: #334155;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      transition: background 0.15s;
+    }
+
+    .step-btn:hover:not(:disabled) {
+      background: #475569;
+    }
+
+    .step-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
 
     .attr-input-box input {
@@ -158,6 +209,7 @@
       font-weight: 700;
       font-size: 16px;
       text-align: center;
+      min-width: 0;
     }
 
     .attr-input-box input:focus {
@@ -221,7 +273,6 @@
       padding-bottom: 10px;
     }
 
-    /* Elemento renderizado */
     #card-to-export {
       width: 100%;
       max-width: 320px;
@@ -406,7 +457,11 @@
         <input type="text" id="input-playstyle" value="COUNTER ATTACK" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
 
-      <span class="attributes-section-label">Atributos (Aceita negativos como -2)</span>
+      <!-- Banner de Distribuição de Pontos -->
+      <div class="points-banner" id="points-banner">
+        Você tem <span class="points-highlight" id="points-remaining">10</span> pontos disponíveis para distribuir à vontade
+      </div>
+
       <div class="attributes-grid" id="attr-inputs-container"></div>
 
       <!-- Ações -->
@@ -419,41 +474,69 @@
   </div>
 
   <script>
+    const TOTAL_POINTS = 10;
+
     const attributeTemplates = {
       linha: [
-        { id: "vel", label: "Velocidade", default: 5 },
-        { id: "tec", label: "Drible", default: 6 },  /* Trocado de Técnica para Drible */
-        { id: "cab", label: "Cabeceio", default: 3 },
-        { id: "pas", label: "Passe", default: 5 },
-        { id: "res", label: "Resiliência", default: 2 },
-        { id: "fin", label: "Finalização", default: 3 },
-        { id: "div", label: "Dividida", default: 4 },
-        { id: "rea", label: "Reação", default: 4 }
+        { id: "vel", label: "Velocidade", default: 0 },
+        { id: "tec", label: "Drible", default: 0 },
+        { id: "cab", label: "Cabeceio", default: 0 },
+        { id: "pas", label: "Passe", default: 0 },
+        { id: "res", label: "Resiliência", default: 0 },
+        { id: "fin", label: "Finalização", default: 0 },
+        { id: "div", label: "Dividida", default: 0 },
+        { id: "rea", label: "Reação", default: 0 }
       ],
       goleiro: [
-        { id: "vel", label: "Velocidade", default: 4 },
-        { id: "tec", label: "Pulo", default: 6 },
-        { id: "cab", label: "Habilidade Aérea", default: 5 },
-        { id: "pas", label: "Passe", default: 4 },
-        { id: "res", label: "Resiliência", default: 3 },
-        { id: "fin", label: "Defesa", default: 6 },
-        { id: "div", label: "Firmeza", default: 5 },
-        { id: "rea", label: "Reação", default: 5 }
+        { id: "vel", label: "Velocidade", default: 0 },
+        { id: "cab", label: "Habilidade Aérea", default: 0 },
+        { id: "pas", label: "Passe", default: 0 },
+        { id: "res", label: "Resiliência", default: 0 },
+        { id: "fin", label: "Defesa", default: 0 },
+        { id: "div", label: "Firmeza", default: 0 },
+        { id: "rea", label: "Reação", default: 0 }
       ]
     };
 
     let currentValues = {};
 
+    function getRemainingPoints() {
+      const position = document.getElementById('input-position').value;
+      const attributes = attributeTemplates[position];
+      let spent = 0;
+      attributes.forEach(attr => {
+        spent += Math.max(0, parseInt(currentValues[attr.id], 10) || 0);
+      });
+      return TOTAL_POINTS - spent;
+    }
+
     function getBadgeColor(value) {
-      if (value >= 5) return '#20b2aa';
-      if (value >= 3) return '#f58220';
-      return '#eb4d4b';
+      if (value >= 9) return '#15803d'; // 9 e 10+ (Verde Escuro)
+      if (value >= 7) return '#20b2aa'; // 7 e 8 (Verde Claro)
+      if (value >= 5) return '#eab308'; // 5 e 6 (Amarelo)
+      if (value >= 3) return '#f58220'; // 3 e 4 (Laranja)
+      return '#eb4d4b';                // 1 e 2 / menores (Vermelho)
     }
 
     function renderInputs() {
       const position = document.getElementById('input-position').value;
       const attributes = attributeTemplates[position];
       const container = document.getElementById('attr-inputs-container');
+      const remaining = getRemainingPoints();
+      
+      // Atualiza o banner de pontos
+      const banner = document.getElementById('points-banner');
+      const pointsSpan = document.getElementById('points-remaining');
+      pointsSpan.textContent = remaining;
+
+      if (remaining <= 0) {
+        banner.classList.add('locked');
+        banner.innerHTML = `Pontos esgotados! (<span class="points-highlight">0</span> restantes - trancado)`;
+      } else {
+        banner.classList.remove('locked');
+        banner.innerHTML = `Você tem <span class="points-highlight">${remaining}</span> pontos disponíveis para distribuir à vontade`;
+      }
+
       container.innerHTML = '';
 
       attributes.forEach(attr => {
@@ -461,29 +544,58 @@
           currentValues[attr.id] = attr.default;
         }
 
+        const val = parseInt(currentValues[attr.id], 10) || 0;
         const box = document.createElement('div');
         box.className = 'attr-input-box';
         box.innerHTML = `
           <label for="attr-${attr.id}">${attr.label}</label>
-          <input 
-            type="text" 
-            inputmode="text" 
-            id="attr-${attr.id}" 
-            value="${currentValues[attr.id]}" 
-            data-id="${attr.id}" 
-            maxlength="4"
-          >
+          <div class="stepper-row">
+            <button type="button" class="step-btn btn-dec" data-id="${attr.id}" ${val <= 0 ? 'disabled' : ''}>-</button>
+            <input 
+              type="number" 
+              inputmode="numeric"
+              id="attr-${attr.id}" 
+              value="${val}" 
+              data-id="${attr.id}"
+              min="0"
+            >
+            <button type="button" class="step-btn btn-inc" data-id="${attr.id}" ${remaining <= 0 ? 'disabled' : ''}>+</button>
+          </div>
         `;
 
-        const inputEl = box.querySelector('input');
-        inputEl.addEventListener('input', (e) => {
-          let val = e.target.value;
-          if (val === '-' || val === '') {
-            currentValues[attr.id] = val;
-          } else {
-            const parsed = parseInt(val, 10);
-            currentValues[attr.id] = isNaN(parsed) ? 0 : parsed;
+        // Botão decrementar (-)
+        box.querySelector('.btn-dec').addEventListener('click', () => {
+          if (currentValues[attr.id] > 0) {
+            currentValues[attr.id]--;
+            renderInputs();
+            renderCard();
           }
+        });
+
+        // Botão incrementar (+) com trava ao atingir 0
+        box.querySelector('.btn-inc').addEventListener('click', () => {
+          if (getRemainingPoints() > 0) {
+            currentValues[attr.id]++;
+            renderInputs();
+            renderCard();
+          }
+        });
+
+        // Digitação manual com controle de trava
+        const inputEl = box.querySelector('input');
+        inputEl.addEventListener('change', (e) => {
+          let typed = parseInt(e.target.value, 10);
+          if (isNaN(typed) || typed < 0) typed = 0;
+
+          const currentVal = parseInt(currentValues[attr.id], 10) || 0;
+          const currentRemaining = getRemainingPoints() + currentVal;
+
+          if (typed > currentRemaining) {
+            typed = currentRemaining; // Trava no máximo permitido
+          }
+
+          currentValues[attr.id] = typed;
+          renderInputs();
           renderCard();
         });
 
@@ -525,6 +637,7 @@
     });
 
     document.getElementById('input-position').addEventListener('change', () => {
+      currentValues = {}; // Reinicia os atributos ao trocar posição
       renderInputs();
       renderCard();
     });
