@@ -109,7 +109,7 @@
       outline: none;
     }
 
-    /* Banner do Sistema de Pontos */
+    /* Banner de Pontos */
     .points-banner {
       background: #0b1329;
       border: 1px solid #38bdf8;
@@ -515,19 +515,12 @@
       if (value >= 7) return '#20b2aa'; // 7 e 8 (Verde Claro)
       if (value >= 5) return '#eab308'; // 5 e 6 (Amarelo)
       if (value >= 3) return '#f58220'; // 3 e 4 (Laranja)
-      return '#eb4d4b';                // 1 e 2 / menores (Vermelho)
+      return '#eb4d4b';                // 0, 1 e 2 (Vermelho)
     }
 
-    function renderInputs() {
-      const position = document.getElementById('input-position').value;
-      const attributes = attributeTemplates[position];
-      const container = document.getElementById('attr-inputs-container');
+    function updateBannerAndButtons() {
       const remaining = getRemainingPoints();
-      
-      // Atualiza o banner de pontos
       const banner = document.getElementById('points-banner');
-      const pointsSpan = document.getElementById('points-remaining');
-      pointsSpan.textContent = remaining;
 
       if (remaining <= 0) {
         banner.classList.add('locked');
@@ -537,6 +530,22 @@
         banner.innerHTML = `Você tem <span class="points-highlight">${remaining}</span> pontos disponíveis para distribuir à vontade`;
       }
 
+      // Atualiza estado de trava dos botões sem recriar os campos
+      document.querySelectorAll('.step-btn.btn-inc').forEach(btn => {
+        btn.disabled = (remaining <= 0);
+      });
+
+      document.querySelectorAll('.step-btn.btn-dec').forEach(btn => {
+        const id = btn.getAttribute('data-id');
+        const val = parseInt(currentValues[id], 10) || 0;
+        btn.disabled = (val <= 0);
+      });
+    }
+
+    function buildInputs() {
+      const position = document.getElementById('input-position').value;
+      const attributes = attributeTemplates[position];
+      const container = document.getElementById('attr-inputs-container');
       container.innerHTML = '';
 
       attributes.forEach(attr => {
@@ -550,7 +559,7 @@
         box.innerHTML = `
           <label for="attr-${attr.id}">${attr.label}</label>
           <div class="stepper-row">
-            <button type="button" class="step-btn btn-dec" data-id="${attr.id}" ${val <= 0 ? 'disabled' : ''}>-</button>
+            <button type="button" class="step-btn btn-dec" data-id="${attr.id}">-</button>
             <input 
               type="number" 
               inputmode="numeric"
@@ -559,48 +568,67 @@
               data-id="${attr.id}"
               min="0"
             >
-            <button type="button" class="step-btn btn-inc" data-id="${attr.id}" ${remaining <= 0 ? 'disabled' : ''}>+</button>
+            <button type="button" class="step-btn btn-inc" data-id="${attr.id}">+</button>
           </div>
         `;
 
-        // Botão decrementar (-)
+        const inputEl = box.querySelector('input');
+
+        // Botão Menos (-)
         box.querySelector('.btn-dec').addEventListener('click', () => {
-          if (currentValues[attr.id] > 0) {
-            currentValues[attr.id]--;
-            renderInputs();
+          let curr = parseInt(currentValues[attr.id], 10) || 0;
+          if (curr > 0) {
+            currentValues[attr.id] = curr - 1;
+            inputEl.value = currentValues[attr.id];
+            updateBannerAndButtons();
             renderCard();
           }
         });
 
-        // Botão incrementar (+) com trava ao atingir 0
+        // Botão Mais (+)
         box.querySelector('.btn-inc').addEventListener('click', () => {
           if (getRemainingPoints() > 0) {
-            currentValues[attr.id]++;
-            renderInputs();
+            let curr = parseInt(currentValues[attr.id], 10) || 0;
+            currentValues[attr.id] = curr + 1;
+            inputEl.value = currentValues[attr.id];
+            updateBannerAndButtons();
             renderCard();
           }
         });
 
-        // Digitação manual com controle de trava
-        const inputEl = box.querySelector('input');
-        inputEl.addEventListener('change', (e) => {
+        // Sincronização em tempo real enquanto digita
+        inputEl.addEventListener('input', (e) => {
           let typed = parseInt(e.target.value, 10);
           if (isNaN(typed) || typed < 0) typed = 0;
 
           const currentVal = parseInt(currentValues[attr.id], 10) || 0;
           const currentRemaining = getRemainingPoints() + currentVal;
 
+          // Se passar dos pontos restantes, trava no máximo possível
           if (typed > currentRemaining) {
-            typed = currentRemaining; // Trava no máximo permitido
+            typed = currentRemaining;
+            inputEl.value = typed;
           }
 
           currentValues[attr.id] = typed;
-          renderInputs();
+          updateBannerAndButtons();
           renderCard();
+        });
+
+        // Garante valor numérico ao sair do campo
+        inputEl.addEventListener('blur', (e) => {
+          if (e.target.value === '') {
+            currentValues[attr.id] = 0;
+            inputEl.value = 0;
+            updateBannerAndButtons();
+            renderCard();
+          }
         });
 
         container.appendChild(box);
       });
+
+      updateBannerAndButtons();
     }
 
     function renderCard() {
@@ -637,8 +665,8 @@
     });
 
     document.getElementById('input-position').addEventListener('change', () => {
-      currentValues = {}; // Reinicia os atributos ao trocar posição
-      renderInputs();
+      currentValues = {};
+      buildInputs();
       renderCard();
     });
 
@@ -681,8 +709,8 @@
       }
     });
 
-    // Boot inicial
-    renderInputs();
+    // Inicialização
+    buildInputs();
     renderCard();
   </script>
 </body>
