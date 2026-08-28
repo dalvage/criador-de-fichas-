@@ -5,12 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Criador de Ficha de Jogador</title>
   
-  <!-- Fontes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Silkscreen&family=Rubik:wght@700;900&display=swap" rel="stylesheet">
   
-  <!-- Biblioteca para captura e geração de imagem PNG -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
   <style>
@@ -379,7 +377,6 @@
 
   <div class="app-container">
     
-    <!-- Pré-visualização da Ficha -->
     <div class="preview-container">
       <div id="card-to-export">
         <div class="card-inner">
@@ -400,7 +397,6 @@
       </div>
     </div>
 
-    <!-- Painel de Configurações -->
     <div class="editor-panel">
       <h2>Editor da Ficha</h2>
 
@@ -436,7 +432,6 @@
       <span class="section-title">Atributos</span>
       <div class="attributes-grid" id="attr-inputs-container"></div>
 
-      <!-- Ações -->
       <div class="actions-panel">
         <button type="button" class="btn btn-png" id="btn-download-png">🖼️ Baixar Ficha em PNG</button>
       </div>
@@ -448,7 +443,7 @@
   <script>
     const attributeTemplates = {
       linha: [
-        { id: "vel", label: "Velocidade", default: 0 },
+        { id: "vel", label: "Ritmo", default: 0 },
         { id: "tec", label: "Drible", default: 0 },
         { id: "cab", label: "Cabeceio", default: 0 },
         { id: "pas", label: "Passe", default: 0 },
@@ -458,7 +453,7 @@
         { id: "rea", label: "Reação", default: 0 }
       ],
       goleiro: [
-        { id: "vel", label: "Velocidade", default: 0 },
+        { id: "vel", label: "Ritmo", default: 0 },
         { id: "cab", label: "Habilidade Aérea", default: 0 },
         { id: "pas", label: "Passe", default: 0 },
         { id: "res", label: "Resiliência", default: 0 },
